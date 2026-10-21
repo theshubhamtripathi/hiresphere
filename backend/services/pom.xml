@@ -18,5 +18,6 @@
 
     <modules>
         <module>user-service</module>
+        <module>company-service</module>
     </modules>
 </project>

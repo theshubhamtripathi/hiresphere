@@ -1,0 +1,23 @@
+server:
+  port: 8087
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/ai_db
+    username: ${POSTGRES_USER:hiresphere}
+    password: ${POSTGRES_PASSWORD:hiresphere}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+hiresphere:
+  ai:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-2.5-flash}
+      base-url: https://generativelanguage.googleapis.com/v1beta
+      timeout-ms: 30000
+    daily-quota: 50

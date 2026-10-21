@@ -17,6 +17,8 @@
     <description>Platform infrastructure services (discovery, config, gateway)</description>
 
     <modules>
-        <!-- populated in Phase 2: discovery-server, config-server, api-gateway -->
+        <module>discovery-server</module>
+        <module>config-server</module>
+        <module>api-gateway</module>
     </modules>
 </project>

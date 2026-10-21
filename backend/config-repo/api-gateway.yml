@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+# Full route table, JWT filter, circuit breakers and rate limiting are added
+# in Phase 9. This skeleton enables discovery-based locator and CORS.
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: ${FRONTEND_URL:http://localhost:5173}
+                allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+                allowedHeaders: "*"
+                allowCredentials: true
+
+hiresphere:
+  jwt:
+    secret: ${JWT_SECRET:change-me-dev-secret-at-least-64-bytes-long-0123456789abcdefghijklmnop}
+    issuer: hiresphere

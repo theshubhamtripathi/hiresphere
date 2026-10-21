@@ -17,6 +17,6 @@
     <description>HireSphere business microservices</description>
 
     <modules>
-        <!-- populated from Phase 3 onward: user-service, company-service, ... -->
+        <module>user-service</module>
     </modules>
 </project>

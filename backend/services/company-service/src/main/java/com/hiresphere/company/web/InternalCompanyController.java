@@ -20,4 +20,9 @@ public class InternalCompanyController {
     public CompanyResponse getById(@PathVariable Long id) {
         return companyService.getByIdOrSlug(String.valueOf(id));
     }
+
+    @GetMapping("/by-owner/{ownerUserId}")
+    public CompanyResponse getByOwner(@PathVariable Long ownerUserId) {
+        return companyService.getMine(ownerUserId);
+    }
 }

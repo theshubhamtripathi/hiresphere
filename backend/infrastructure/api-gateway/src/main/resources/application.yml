@@ -11,3 +11,9 @@ eureka:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
   instance:
     prefer-ip-address: true
+
+# Fallback defaults so the gateway can start (and tests load) without the Config Server.
+hiresphere:
+  jwt:
+    secret: ${JWT_SECRET:change-me-dev-secret-at-least-64-bytes-long-0123456789abcdefghijklmnop}
+    issuer: hiresphere

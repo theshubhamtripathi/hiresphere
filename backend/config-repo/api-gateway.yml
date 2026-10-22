@@ -1,13 +1,14 @@
 server:
   port: 8080
 
-# Full route table, JWT filter, circuit breakers and rate limiting are added
-# in Phase 9. This skeleton enables discovery-based locator and CORS.
 spring:
   cloud:
     gateway:
       server:
         webflux:
+          httpclient:
+            connect-timeout: 2000
+            response-timeout: 12s
           discovery:
             locator:
               enabled: false
@@ -18,6 +19,187 @@ spring:
                 allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
                 allowedHeaders: "*"
                 allowCredentials: true
+          routes:
+            - id: auth
+              uri: lb://user-service
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userCb
+                    fallbackUri: forward:/fallback/user-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 5
+                    redis-rate-limiter.burstCapacity: 10
+
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/users/**,/api/admin/users/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: userCb
+                    fallbackUri: forward:/fallback/user-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: company-service
+              uri: lb://company-service
+              predicates:
+                - Path=/api/companies/**,/api/admin/companies/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: companyCb
+                    fallbackUri: forward:/fallback/company-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: job-service
+              uri: lb://job-service
+              predicates:
+                - Path=/api/jobs/**,/api/job-categories/**,/api/skills/**,/api/tags/**,/api/admin/job-categories/**,/api/admin/skills/**,/api/admin/tags/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: jobCb
+                    fallbackUri: forward:/fallback/job-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 30
+                    redis-rate-limiter.burstCapacity: 60
+
+            - id: resume-service
+              uri: lb://resume-service
+              predicates:
+                - Path=/api/resumes/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: resumeCb
+                    fallbackUri: forward:/fallback/resume-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: application-service
+              uri: lb://application-service
+              predicates:
+                - Path=/api/applications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: applicationCb
+                    fallbackUri: forward:/fallback/application-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: preference-service
+              uri: lb://job-preference-service
+              predicates:
+                - Path=/api/saved-jobs/**,/api/preferences/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: preferenceCb
+                    fallbackUri: forward:/fallback/job-preference-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: ai-service
+              uri: lb://ai-service
+              predicates:
+                - Path=/api/ai/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: aiCb
+                    fallbackUri: forward:/fallback/ai-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 5
+                    redis-rate-limiter.burstCapacity: 8
+
+            - id: notification-service
+              uri: lb://notification-service
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: notificationCb
+                    fallbackUri: forward:/fallback/notification-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/plans/**,/api/payments/**,/api/subscriptions/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: paymentCb
+                    fallbackUri: forward:/fallback/payment-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+            - id: analytics-service
+              uri: lb://analytics-service
+              predicates:
+                - Path=/api/analytics/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: analyticsCb
+                    fallbackUri: forward:/fallback/analytics-service
+                - name: RequestRateLimiter
+                  args:
+                    key-resolver: "#{@userKeyResolver}"
+                    redis-rate-limiter.replenishRate: 20
+                    redis-rate-limiter.burstCapacity: 40
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 12
+        minimumNumberOfCalls: 6
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10s
+        permittedNumberOfCallsInHalfOpenState: 3
+        registerHealthIndicator: true
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 12s
+        cancelRunningFuture: true
 
 hiresphere:
   jwt:

@@ -32,6 +32,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
+    private final UserEventPublisher userEventPublisher;
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
@@ -47,7 +48,9 @@ public class AuthService {
         user.setFullName(request.fullName());
         user.setRole(request.role());
         user.setEnabled(true);
-        return userMapper.toResponse(userRepository.save(user));
+        User saved = userRepository.save(user);
+        userEventPublisher.publishRegistered(saved);
+        return userMapper.toResponse(saved);
     }
 
     @Transactional

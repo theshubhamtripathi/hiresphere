@@ -36,6 +36,7 @@ class AuthServiceTest {
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtService jwtService;
     @Mock UserMapper userMapper;
+    @Mock UserEventPublisher userEventPublisher;
 
     AuthService authService;
 
@@ -43,7 +44,7 @@ class AuthServiceTest {
     void setUp() {
         JwtProperties props = new JwtProperties("secret", 900000, 604800000, "hiresphere");
         authService = new AuthService(userRepository, refreshTokenRepository, passwordEncoder,
-                jwtService, props, userMapper);
+                jwtService, props, userMapper, userEventPublisher);
     }
 
     private User enabledUser() {

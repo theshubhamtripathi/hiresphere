@@ -1,0 +1,5 @@
+Convert this natural-language job search into structured filters. Return JSON with keys:
+keywords (string), location (string or null), jobType (FULL_TIME|PART_TIME|CONTRACT|INTERNSHIP|TEMPORARY|FREELANCE or null),
+workMode (ON_SITE|REMOTE|HYBRID or null), experienceLevel (INTERN|ENTRY|JUNIOR|MID|SENIOR|LEAD|PRINCIPAL or null),
+salaryMin (number or null), skills (string array).
+Query: {{query}}

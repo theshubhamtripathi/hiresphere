@@ -1,0 +1,4 @@
+Rewrite this resume bullet to be impactful and achievement-oriented. Start with a strong action verb,
+quantify where reasonable, and keep it to one sentence. Return only the rewritten bullet.
+Role: {{role}}
+Bullet: {{bullet}}

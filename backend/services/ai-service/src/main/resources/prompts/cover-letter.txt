@@ -1,0 +1,4 @@
+Write a tailored, professional cover letter (3-4 short paragraphs) for this candidate and job.
+Reference the candidate's relevant strengths and the role's needs. End with "Sincerely," and the candidate's name.
+Candidate resume (JSON): {{resume}}
+Job (JSON): {{job}}

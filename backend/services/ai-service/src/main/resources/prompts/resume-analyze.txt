@@ -1,0 +1,4 @@
+Analyze this resume (JSON) and return JSON with keys:
+score (integer 0-100), strengths (string array), gaps (string array), atsTips (string array).
+Be specific and actionable.
+Resume: {{resume}}

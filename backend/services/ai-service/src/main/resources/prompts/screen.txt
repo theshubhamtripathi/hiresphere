@@ -1,0 +1,5 @@
+Screen this candidate against the job. Return JSON with keys:
+matchScore (integer 0-100), matchedSkills (string array), missingSkills (string array),
+summary (string, 2-3 sentences), recommendation (one of STRONG_MATCH, POSSIBLE_MATCH, WEAK_MATCH).
+Candidate resume (JSON): {{resume}}
+Job (JSON): {{job}}

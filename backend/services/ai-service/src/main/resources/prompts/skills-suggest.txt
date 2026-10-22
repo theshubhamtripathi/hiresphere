@@ -1,0 +1,3 @@
+Suggest 6-10 relevant skills for this job. Return JSON: {"skills": ["..."]}. Use concise, standard skill names.
+Title: {{title}}
+Description: {{description}}

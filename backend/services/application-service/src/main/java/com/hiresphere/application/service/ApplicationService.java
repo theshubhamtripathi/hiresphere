@@ -177,6 +177,17 @@ public class ApplicationService {
         noteRepository.delete(note);
     }
 
+    // ---- Internal views ----
+
+    public record InternalView(Long id, Long jobId, Long companyId, Long applicantId, String resumeSnapshot) {
+    }
+
+    @Transactional(readOnly = true)
+    public InternalView getInternal(Long id) {
+        JobApplication a = find(id);
+        return new InternalView(a.getId(), a.getJobId(), a.getCompanyId(), a.getApplicantId(), a.getResumeSnapshot());
+    }
+
     // ---- AI result (internal) ----
 
     @Transactional

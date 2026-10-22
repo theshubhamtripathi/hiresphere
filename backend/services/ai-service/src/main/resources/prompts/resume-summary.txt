@@ -1,0 +1,5 @@
+Write a concise, professional resume summary (3-4 sentences, first person implied, no name).
+Target role: {{role}}
+Key skills: {{skills}}
+Experience context: {{experience}}
+Keep it confident, specific and free of clichés.

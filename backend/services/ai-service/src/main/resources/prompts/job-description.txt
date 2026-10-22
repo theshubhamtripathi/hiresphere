@@ -1,0 +1,7 @@
+Write a compelling, well-structured job description with sections: About the role, What you'll do,
+What we're looking for, What we offer. Use clear bullet points where appropriate.
+Title: {{title}}
+Company: {{company}}
+Seniority: {{seniority}}
+Required skills: {{skills}}
+Extra context: {{context}}

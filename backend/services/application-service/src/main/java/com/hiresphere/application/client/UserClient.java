@@ -1,5 +1,7 @@
 package com.hiresphere.application.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -9,7 +11,7 @@ public class UserClient {
 
     private final RestClient restClient;
 
-    public UserClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public UserClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://user-service").build();
     }
 

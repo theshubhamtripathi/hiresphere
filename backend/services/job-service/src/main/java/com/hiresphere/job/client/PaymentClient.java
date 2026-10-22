@@ -1,5 +1,7 @@
 package com.hiresphere.job.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,7 +15,7 @@ public class PaymentClient {
 
     private final RestClient restClient;
 
-    public PaymentClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public PaymentClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://payment-service").build();
     }
 

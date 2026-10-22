@@ -1,6 +1,7 @@
 package com.hiresphere.ai.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.hiresphere.ai.dto.AiRequests;
 import com.hiresphere.ai.dto.AiResults;
 import com.hiresphere.common.exception.BadRequestException;
@@ -19,13 +20,14 @@ public class ServiceClients {
     private final RestClient applicationClient;
     private final RestClient companyClient;
 
-    public ServiceClients(RestClient.Builder loadBalancedRestClientBuilder) {
+    public ServiceClients(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.resumeClient = loadBalancedRestClientBuilder.clone().baseUrl("http://resume-service").build();
         this.jobClient = loadBalancedRestClientBuilder.clone().baseUrl("http://job-service").build();
         this.applicationClient = loadBalancedRestClientBuilder.clone().baseUrl("http://application-service").build();
         this.companyClient = loadBalancedRestClientBuilder.clone().baseUrl("http://company-service").build();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record ApplicationView(Long id, Long jobId, Long companyId, Long applicantId, String resumeSnapshot) {
     }
 
@@ -56,11 +58,15 @@ public class ServiceClients {
         }
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
+    public record CompanyIdView(Long id) {
+    }
+
     public Long companyIdForOwner(Long ownerUserId) {
         try {
-            JsonNode node = companyClient.get().uri("/api/internal/companies/by-owner/{id}", ownerUserId)
-                    .retrieve().body(JsonNode.class);
-            return node == null ? null : node.path("id").asLong();
+            CompanyIdView view = companyClient.get().uri("/api/internal/companies/by-owner/{id}", ownerUserId)
+                    .retrieve().body(CompanyIdView.class);
+            return view == null ? null : view.id();
         } catch (RestClientException ex) {
             throw new ForbiddenException("You must own a company to screen candidates");
         }
@@ -73,7 +79,7 @@ public class ServiceClients {
                 .body(payload).retrieve().toBodilessEntity();
     }
 
-    public JsonNode searchJobs(AiResults.SearchFilters filters) {
+    public Object searchJobs(AiResults.SearchFilters filters) {
         UriComponentsBuilder uri = UriComponentsBuilder.fromPath("/api/jobs").queryParam("size", 20);
         if (filters.keywords() != null && !filters.keywords().isBlank()) uri.queryParam("q", filters.keywords());
         if (filters.location() != null) uri.queryParam("location", filters.location());
@@ -83,7 +89,7 @@ public class ServiceClients {
         if (filters.salaryMin() != null) uri.queryParam("salaryMin", filters.salaryMin());
         if (filters.skills() != null && !filters.skills().isEmpty()) uri.queryParam("skills", filters.skills().toArray());
         try {
-            return jobClient.get().uri(uri.build().toUriString()).retrieve().body(JsonNode.class);
+            return jobClient.get().uri(uri.build().toUriString()).retrieve().body(Object.class);
         } catch (RestClientException ex) {
             return null;
         }

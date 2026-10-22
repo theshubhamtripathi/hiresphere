@@ -1,5 +1,7 @@
 package com.hiresphere.preference.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,7 +12,7 @@ public class UserClient {
 
     private final RestClient restClient;
 
-    public UserClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public UserClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://user-service").build();
     }
 

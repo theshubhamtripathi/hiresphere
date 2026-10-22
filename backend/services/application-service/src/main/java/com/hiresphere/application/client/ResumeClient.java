@@ -1,5 +1,7 @@
 package com.hiresphere.application.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.hiresphere.common.exception.BadRequestException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,7 +12,7 @@ public class ResumeClient {
 
     private final RestClient restClient;
 
-    public ResumeClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public ResumeClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://resume-service").build();
     }
 

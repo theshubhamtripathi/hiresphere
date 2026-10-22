@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.info.Info;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.util.StringUtils;
@@ -37,6 +38,12 @@ public class AiConfig {
     @Bean
     @LoadBalanced
     RestClient.Builder loadBalancedRestClientBuilder() {
+        return RestClient.builder();
+    }
+
+    @Bean
+    @Primary
+    RestClient.Builder restClientBuilder() {
         return RestClient.builder();
     }
 

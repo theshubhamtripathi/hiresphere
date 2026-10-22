@@ -1,5 +1,7 @@
 package com.hiresphere.application.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.hiresphere.common.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,7 +12,7 @@ public class JobClient {
 
     private final RestClient restClient;
 
-    public JobClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public JobClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://job-service").build();
     }
 

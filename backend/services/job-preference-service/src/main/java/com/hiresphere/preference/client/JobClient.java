@@ -1,5 +1,7 @@
 package com.hiresphere.preference.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,7 @@ public class JobClient {
 
     private final RestClient restClient;
 
-    public JobClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public JobClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://job-service").build();
     }
 

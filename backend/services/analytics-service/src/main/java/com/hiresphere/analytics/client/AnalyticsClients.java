@@ -1,5 +1,7 @@
 package com.hiresphere.analytics.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hiresphere.common.exception.ForbiddenException;
 import org.springframework.stereotype.Component;
@@ -12,7 +14,7 @@ public class AnalyticsClients {
     private final RestClient companyClient;
     private final RestClient jobClient;
 
-    public AnalyticsClients(RestClient.Builder loadBalancedRestClientBuilder) {
+    public AnalyticsClients(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.companyClient = loadBalancedRestClientBuilder.clone().baseUrl("http://company-service").build();
         this.jobClient = loadBalancedRestClientBuilder.clone().baseUrl("http://job-service").build();
     }

@@ -1,5 +1,7 @@
 package com.hiresphere.application.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.hiresphere.common.exception.ForbiddenException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -10,7 +12,7 @@ public class CompanyClient {
 
     private final RestClient restClient;
 
-    public CompanyClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public CompanyClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://company-service").build();
     }
 

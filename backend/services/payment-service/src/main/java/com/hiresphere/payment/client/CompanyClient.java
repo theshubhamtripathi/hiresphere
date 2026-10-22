@@ -1,5 +1,7 @@
 package com.hiresphere.payment.client;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hiresphere.common.exception.ForbiddenException;
 import org.springframework.stereotype.Component;
@@ -11,7 +13,7 @@ public class CompanyClient {
 
     private final RestClient restClient;
 
-    public CompanyClient(RestClient.Builder loadBalancedRestClientBuilder) {
+    public CompanyClient(@LoadBalanced RestClient.Builder loadBalancedRestClientBuilder) {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://company-service").build();
     }
 

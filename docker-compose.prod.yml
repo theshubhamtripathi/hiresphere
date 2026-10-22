@@ -1,0 +1,33 @@
+# Production override. Use together with the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Adds a Caddy reverse proxy that terminates TLS and is the ONLY service that
+# should be reachable from the internet. On the VPS firewall, allow only 80/443
+# (and SSH); do not expose the per-service ports published in the base file.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: hs-caddy
+    depends_on:
+      - api-gateway
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+  # Harden the gateway for production.
+  api-gateway:
+    environment:
+      FRONTEND_URL: ${FRONTEND_URL}
+    restart: always
+
+volumes:
+  caddy_data:
+  caddy_config:

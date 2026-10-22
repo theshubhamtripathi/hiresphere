@@ -1,0 +1,6 @@
+# Production reverse proxy. Set DOMAIN in .env (e.g. api.example.com).
+# Caddy obtains and renews TLS certificates automatically.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy api-gateway:8080
+}

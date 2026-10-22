@@ -22,5 +22,6 @@
         <module>job-service</module>
         <module>resume-service</module>
         <module>application-service</module>
+        <module>job-preference-service</module>
     </modules>
 </project>

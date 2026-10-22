@@ -1,10 +1,45 @@
 name: hiresphere
 
-# Infrastructure for local development. Business services are added in Phase 13.
-# Bring up infra only:   docker compose up -d postgres redis kafka mailpit
-# Include admin tooling:  docker compose --profile tools up -d
+# Full stack. Start order is enforced via healthchecks:
+#   infra -> discovery -> config -> business services -> gateway
+# Bring everything up:   docker compose up -d --build
+# Admin tooling (kafka-ui): docker compose --profile tools up -d
+
+x-service-env: &service-env
+  EUREKA_URI: http://discovery-server:8761/eureka
+  CONFIG_IMPORT: configserver:http://config-server:8888
+  DB_HOST: postgres
+  DB_PORT: 5432
+  KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  POSTGRES_USER: ${POSTGRES_USER:-hiresphere}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hiresphere}
+  JWT_SECRET: ${JWT_SECRET:-change-me-dev-secret-at-least-64-bytes-long-0123456789abcdefghijklmnop}
+  JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-900000}
+  JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-604800000}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+  RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID:-}
+  RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET:-}
+  RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+  MAIL_HOST: mailpit
+  MAIL_PORT: 1025
+  MAIL_FROM: ${MAIL_FROM:-no-reply@hiresphere.local}
+  ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@hiresphere.local}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@12345}
+  FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+
+x-service-deps: &service-deps
+  config-server:
+    condition: service_healthy
+  postgres:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
 
 services:
+  # ---------- Infrastructure ----------
   postgres:
     image: postgres:17-alpine
     container_name: hs-postgres
@@ -43,8 +78,8 @@ services:
     image: apache/kafka:3.9.1
     container_name: hs-kafka
     ports:
-      - "9092:9092"    # in-network listener (advertised as kafka:9092)
-      - "29092:29092"  # host listener for services running outside Docker
+      - "9092:9092"
+      - "29092:29092"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -71,8 +106,8 @@ services:
     image: axllent/mailpit:latest
     container_name: hs-mailpit
     ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # web UI
+      - "1025:1025"
+      - "8025:8025"
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 10s
@@ -93,6 +128,195 @@ services:
       KAFKA_CLUSTERS_0_NAME: hiresphere
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       DYNAMIC_CONFIG_ENABLED: "true"
+    restart: unless-stopped
+
+  # ---------- Platform services ----------
+  discovery-server:
+    build:
+      context: ./backend
+      args:
+        JAR: infrastructure/discovery-server/target/discovery-server-1.0.0.jar
+    container_name: hs-discovery
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    mem_limit: 400m
+    restart: unless-stopped
+
+  config-server:
+    build:
+      context: ./backend
+      args:
+        JAR: infrastructure/config-server/target/config-server-1.0.0.jar
+    container_name: hs-config
+    environment:
+      EUREKA_URI: http://discovery-server:8761/eureka
+      CONFIG_REPO_LOCATIONS: file:/config-repo
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    mem_limit: 400m
+    restart: unless-stopped
+
+  user-service:
+    build: {context: ./backend, args: {JAR: services/user-service/target/user-service-1.0.0.jar}}
+    container_name: hs-user
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  company-service:
+    build: {context: ./backend, args: {JAR: services/company-service/target/company-service-1.0.0.jar}}
+    container_name: hs-company
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  job-service:
+    build: {context: ./backend, args: {JAR: services/job-service/target/job-service-1.0.0.jar}}
+    container_name: hs-job
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  resume-service:
+    build: {context: ./backend, args: {JAR: services/resume-service/target/resume-service-1.0.0.jar}}
+    container_name: hs-resume
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  application-service:
+    build: {context: ./backend, args: {JAR: services/application-service/target/application-service-1.0.0.jar}}
+    container_name: hs-application
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  job-preference-service:
+    build: {context: ./backend, args: {JAR: services/job-preference-service/target/job-preference-service-1.0.0.jar}}
+    container_name: hs-preference
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  ai-service:
+    build: {context: ./backend, args: {JAR: services/ai-service/target/ai-service-1.0.0.jar}}
+    container_name: hs-ai
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  notification-service:
+    build: {context: ./backend, args: {JAR: services/notification-service/target/notification-service-1.0.0.jar}}
+    container_name: hs-notification
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  payment-service:
+    build: {context: ./backend, args: {JAR: services/payment-service/target/payment-service-1.0.0.jar}}
+    container_name: hs-payment
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  analytics-service:
+    build: {context: ./backend, args: {JAR: services/analytics-service/target/analytics-service-1.0.0.jar}}
+    container_name: hs-analytics
+    environment: *service-env
+    depends_on: *service-deps
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
+    restart: unless-stopped
+
+  api-gateway:
+    build: {context: ./backend, args: {JAR: infrastructure/api-gateway/target/api-gateway-1.0.0.jar}}
+    container_name: hs-gateway
+    environment:
+      <<: *service-env
+    depends_on:
+      config-server:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+    mem_limit: 450m
     restart: unless-stopped
 
 volumes:

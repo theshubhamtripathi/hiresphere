@@ -13,6 +13,7 @@ public class UserClient {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://user-service").build();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record UserInfo(Long id, String email, String fullName) {
     }
 

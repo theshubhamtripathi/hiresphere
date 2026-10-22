@@ -35,4 +35,9 @@ public class InternalJobController {
     public void adjust(@PathVariable Long id, @RequestParam long delta) {
         jobService.adjustApplicationsCount(id, delta);
     }
+
+    @GetMapping("/company/{companyId}/active-count")
+    public long activeCount(@PathVariable Long companyId) {
+        return jobService.activeJobCount(companyId);
+    }
 }

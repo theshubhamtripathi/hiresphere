@@ -17,6 +17,7 @@ public class CompanyClient {
                 .build();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record Company(Long id, String name, String logoUrl, String status) {
     }
 

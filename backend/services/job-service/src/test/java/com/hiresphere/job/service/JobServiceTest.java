@@ -5,6 +5,7 @@ import com.hiresphere.common.enums.JobType;
 import com.hiresphere.common.enums.WorkMode;
 import com.hiresphere.common.exception.ForbiddenException;
 import com.hiresphere.job.client.CompanyClient;
+import com.hiresphere.job.client.PaymentClient;
 import com.hiresphere.job.domain.Job;
 import com.hiresphere.job.domain.JobStatus;
 import com.hiresphere.job.dto.CreateJobRequest;
@@ -36,10 +37,11 @@ class JobServiceTest {
     private final TagRepository tagRepository = mock(TagRepository.class);
     private final JobMapper jobMapper = mock(JobMapper.class);
     private final CompanyClient companyClient = mock(CompanyClient.class);
+    private final PaymentClient paymentClient = mock(PaymentClient.class);
     private final JobEventPublisher publisher = mock(JobEventPublisher.class);
 
     private final JobService service = new JobService(jobRepository, skillRepository, tagRepository,
-            jobMapper, companyClient, publisher);
+            jobMapper, companyClient, paymentClient, publisher);
 
     private CreateJobRequest request(boolean publish) {
         return new CreateJobRequest("Engineer", "Great role", null, null, null, 1L,
@@ -50,6 +52,7 @@ class JobServiceTest {
     @Test
     void publishesEventWhenCreatedAsOpen() {
         when(companyClient.getByOwner(7L)).thenReturn(new CompanyClient.Company(3L, "Acme", null, "ACTIVE"));
+        when(paymentClient.consumeJobCredit(3L)).thenReturn(true);
         when(jobRepository.save(any(Job.class))).thenAnswer(inv -> {
             Job j = inv.getArgument(0);
             j.setId(100L);

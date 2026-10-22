@@ -1,8 +1,10 @@
 package com.hiresphere.job.service;
 
+import com.hiresphere.common.exception.BadRequestException;
 import com.hiresphere.common.exception.ForbiddenException;
 import com.hiresphere.common.exception.ResourceNotFoundException;
 import com.hiresphere.job.client.CompanyClient;
+import com.hiresphere.job.client.PaymentClient;
 import com.hiresphere.job.config.CacheConfig;
 import com.hiresphere.job.domain.Job;
 import com.hiresphere.job.domain.JobStatus;
@@ -40,16 +42,21 @@ public class JobService {
     private final TagRepository tagRepository;
     private final JobMapper jobMapper;
     private final CompanyClient companyClient;
+    private final PaymentClient paymentClient;
     private final JobEventPublisher eventPublisher;
 
     @Transactional
     public JobResponse create(Long ownerUserId, CreateJobRequest req) {
         Long companyId = companyClient.getByOwner(ownerUserId).id();
+        boolean publish = Boolean.TRUE.equals(req.publish());
+        if (publish) {
+            requireJobCredit(companyId);
+        }
         Job job = new Job();
         job.setCompanyId(companyId);
         job.setPostedBy(ownerUserId);
         applyCreate(job, req);
-        job.setStatus(Boolean.TRUE.equals(req.publish()) ? JobStatus.OPEN : JobStatus.DRAFT);
+        job.setStatus(publish ? JobStatus.OPEN : JobStatus.DRAFT);
         job.setSkills(resolveSkills(req.skills()));
         job.setTags(resolveTags(req.tags()));
         job = jobRepository.save(job);
@@ -97,6 +104,9 @@ public class JobService {
     public JobResponse changeStatus(Long id, Long ownerUserId, JobStatus status) {
         Job job = requireOwned(id, ownerUserId);
         JobStatus previous = job.getStatus();
+        if (status == JobStatus.OPEN && previous != JobStatus.OPEN) {
+            requireJobCredit(job.getCompanyId());
+        }
         job.setStatus(status);
         if (status == JobStatus.OPEN && previous != JobStatus.OPEN) {
             eventPublisher.publishJobPosted(job);
@@ -145,6 +155,11 @@ public class JobService {
     @Transactional(readOnly = true)
     public List<JobSummaryResponse> getByIds(List<Long> ids) {
         return jobRepository.findAllById(ids).stream().map(jobMapper::toSummary).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public long activeJobCount(Long companyId) {
+        return jobRepository.countByCompanyIdAndStatus(companyId, JobStatus.OPEN);
     }
 
     private void applyCreate(Job job, CreateJobRequest req) {
@@ -201,6 +216,12 @@ public class JobService {
             }
         }
         return result;
+    }
+
+    private void requireJobCredit(Long companyId) {
+        if (!paymentClient.consumeJobCredit(companyId)) {
+            throw new BadRequestException("No job credits left. Upgrade your plan to post more jobs.");
+        }
     }
 
     private Job find(Long id) {

@@ -14,6 +14,7 @@ public class JobClient {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://job-service").build();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record JobInfo(Long id, String title, String status, Long companyId) {
     }
 

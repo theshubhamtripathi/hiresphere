@@ -14,6 +14,7 @@ public class CompanyClient {
         this.restClient = loadBalancedRestClientBuilder.baseUrl("http://company-service").build();
     }
 
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties(ignoreUnknown = true)
     public record CompanyInfo(Long id, String name) {
     }
 

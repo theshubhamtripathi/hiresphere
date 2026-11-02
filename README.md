@@ -16,6 +16,19 @@ job descriptions, candidate screening, cover letters and natural-language search
 **React 19** single-page app. Everything runs locally with a single `docker compose up` — no API keys
 required (AI falls back to a deterministic mock, email to a local Mailpit inbox).
 
+## Screenshots
+
+| | |
+|---|---|
+| **Home** — search, categories, latest jobs | **Job listing** — filters, AI search, pagination |
+| ![Home](docs/screenshots/home.png) | ![Jobs](docs/screenshots/jobs.png) |
+| **Job details** | **Apply flow** — multi-step with AI cover letter |
+| ![Job details](docs/screenshots/job-details.png) | ![Apply flow](docs/screenshots/apply-flow.png) |
+| **Resume builder** — sections, AI summary, completion score | **Employer dashboard** — stats & charts |
+| ![Resume builder](docs/screenshots/resume-builder.png) | ![Employer dashboard](docs/screenshots/employer-dashboard.png) |
+| **Employer applications** — AI candidate screening | **Admin dashboard** — platform analytics |
+| ![AI screening](docs/screenshots/ai-screening.png) | ![Admin dashboard](docs/screenshots/admin-dashboard.png) |
+
 ## Features
 
 ### Job seekers

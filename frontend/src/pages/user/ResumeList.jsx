@@ -15,7 +15,7 @@ export default function ResumeList() {
   const [title, setTitle] = useState('');
 
   const load = () => dispatch(fetchResumes()).finally(() => setLoading(false));
-  useEffect(load, [dispatch]);
+  useEffect(() => { load(); }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const create = async () => {
     if (!title.trim()) return;

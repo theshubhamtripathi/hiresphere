@@ -20,6 +20,8 @@ export default function AdminUsers() {
     setLoading(true);
     dispatch(fetchAdminUsers({ q: q || undefined, role: role || undefined, page, size: 15 })).finally(() => setLoading(false));
   };
+  // `q` is intentionally excluded — search runs on Enter / button, not on every keystroke.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, [dispatch, role, page]);
 
   const toggle = async (u) => {

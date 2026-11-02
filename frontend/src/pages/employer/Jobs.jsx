@@ -13,7 +13,7 @@ export default function EmployerJobs() {
   const [loading, setLoading] = useState(true);
 
   const load = () => dispatch(fetchMyJobs({ size: 100 })).finally(() => setLoading(false));
-  useEffect(load, [dispatch]);
+  useEffect(() => { load(); }, [dispatch]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = async (job) => {
     const next = job.status === 'OPEN' ? 'CLOSED' : 'OPEN';
